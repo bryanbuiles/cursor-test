@@ -1,0 +1,17 @@
+---
+description: Componentes React y convenciones de UI en apps/web
+globs: apps/web/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Frontend (`apps/web`)
+
+- App Router, componentes funcionales, TypeScript. Estilos con **Tailwind** (utilidades; no CSS Modules nuevos salvo layout mínimo global).
+- La UI **no evalúa** flags: solo `fetch` a la API (`credentials: "include"`). Prohibido portar `evaluateFlag`, FNV-1a o precedencia como fuente de verdad en el cliente.
+- `NEXT_PUBLIC_API_URL` (default `http://localhost:8787`). Helper único de `apiFetch`; no duplicar base URL.
+- Rutas de operador (`/`, `/flags/*`, `/simulator`, `/history`) exigen sesión: si `GET /v1/auth/me` es 401 → redirect `/login`.
+- Formularios controlados; errores de API (409 duplicado, 400 percent) visibles en pantalla.
+- `flag_key` inmutable en edición: input `disabled`, no enviarlo en PATCH.
+- Al hacer PUT de environment, enviar **ambos** `enabled_global` y `rollout_percent` vigente (no resetear % al toglear).
+- Server Components: si fetchean la API, reenviar header `Cookie`. Client fetch con credentials es válido.
+- No OAuth, no roles, no SDKs de flags. Logout opcional vía `POST /v1/auth/logout`.

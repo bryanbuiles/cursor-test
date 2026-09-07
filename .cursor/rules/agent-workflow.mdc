@@ -1,0 +1,15 @@
+---
+description: Estilo de trabajo de agentes — alcance de spec, deps y diffs pequeños
+alwaysApply: true
+---
+
+# Estilo de cambios (agentes)
+
+- Fuente de implementación: **una spec** en `docs/specs/` (orden `01`…`11`). No adelantar la siguiente (Out of scope de esa spec).
+- No editar archivos fuera de lo necesario para esa spec. No “limpiar” el repo ni reformatear archivos no tocados.
+- No instalar dependencias sin justificarlas en el cambio (alineadas al stack: Next, Hono, Drizzle, SQLite/libSQL, Tailwind, Vitest, pnpm). No añadir OAuth, Prisma, Redux, Playwright, etc. salvo que la spec lo pida.
+- No crear `docs/prd.md`; el PRD es `docs/prds/feature-flags-mvp.md`.
+- Contratos JSON y nombres de tablas ya fijados en specs 03–04: no “mejorarlos” de forma incompatible.
+- Commits: **solo si el usuario lo pide**. Entonces: un commit pequeño por spec o por unidad coherente; mensaje en por qué, no dump de archivos; no commitear `.sqlite`, `.env` con secretos, ni `node_modules`.
+- Verificar con el comando de la spec (`pnpm test`, `pnpm --filter api test`, curl health) antes de dar por cerrada la tarea.
+- No inventar roles, OAuth ni catálogo rico de empresas.

@@ -1,0 +1,24 @@
+---
+description: Arquitectura del monorepo y límites entre web, api, db y domain
+alwaysApply: true
+---
+
+# Arquitectura del monorepo
+
+pnpm workspaces. No mezclar responsabilidades entre paquetes.
+
+| Paquete | Nombre | Responsabilidad | Prohibido |
+| --- | --- | --- | --- |
+| `apps/web` | web | Next.js App Router, Tailwind, UI de operador | Evaluar flags, SQL, Drizzle, reglas de targeting |
+| `apps/api` | api | Hono, HTTP, sesión cookie, cache de evaluate, CORS | JSX, lógica de precedencia/hash (llamar a `@ff/domain`) |
+| `packages/db` | `@ff/db` | Drizzle, schema, migrate, seed, `getDb()` | HTTP, React, `evaluateFlag` |
+| `packages/domain` | `@ff/domain` | Tipos, hash FNV-1a, `evaluateFlag` puro | I/O, fetch, `getDb()`, cookies |
+
+- Puertos fijos: web `3000`, API `8787`. `NEXT_PUBLIC_API_URL=http://localhost:8787`.
+- SQLite local: `packages/db/data/app.sqlite`. Un solo writer.
+- Contratos HTTP canónicos: specs `04+` (`/v1/flags*`, `/v1/auth*`, `POST /v1/evaluate`, `GET /v1/audit`).
+- Operador: cookie `ff_session` en `/v1/flags*` y `/v1/audit`. Evaluate **sin** cookie.
+- Auth MVP: un usuario demo (`DEMO_USER`/`DEMO_PASSWORD`, default `demo`/`demo`). Sin OAuth ni roles.
+- Dependencias: web → API por fetch; api → `@ff/db` + `@ff/domain`; domain **no** depende de db ni de apps.
+
+Fuente: `docs/prds/feature-flags-mvp.md` y `docs/specs/`. Implementar **una spec a la vez**.

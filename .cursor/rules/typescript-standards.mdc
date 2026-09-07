@@ -1,0 +1,23 @@
+---
+description: TypeScript estricto, tipos en @ff/domain, prohibido any
+alwaysApply: true
+---
+
+# TypeScript
+
+- `strict: true` en todos los `tsconfig`. No debilitar con `strictNullChecks: false` ni `noImplicitAny: false`.
+- **Prohibido `any`.** Usar tipos del dominio, uniones, `unknown` + narrowing, o genéricos. Si una lib no tipa, encapsular en un adapter con tipo explícito.
+- **Prohibido** `as any`, `@ts-ignore`, `@ts-expect-error` salvo bug de terceros documentado en un comentario de una línea.
+- Tipos de producto (`Flag`, `Environment`, `EvaluateInput`, `EvaluateResult`, `FlagSnapshot`, reasons) viven en **`packages/domain`** (`@ff/domain`). Apps importan esos tipos; no redefinir shapes JSON en web y api por separado.
+- `environment` es la unión `"dev" | "staging" | "prod"`, no `string` suelto.
+- Funciones exportadas con tipos de parámetros y retorno explícitos en `@ff/domain` y handlers de API.
+- Errores de red/DB: `unknown` en `catch`, no `any`.
+
+```ts
+// ❌
+function evalFlag(x: any): any { return x.enabled }
+
+// ✅
+import type { EvaluateInput, EvaluateResult, FlagSnapshot } from "@ff/domain";
+export function evaluateFlag(input: EvaluateInput, snapshot: FlagSnapshot | null): EvaluateResult
+```
