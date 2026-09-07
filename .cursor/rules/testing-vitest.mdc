@@ -1,0 +1,23 @@
+---
+description: Vitest — ubicación, qué testear y mínimos por paquete
+globs: "**/*.test.ts"
+alwaysApply: false
+---
+
+# Testing (Vitest)
+
+- Runner: Vitest `run` (no watch en `pnpm test`). Archivos `*.test.ts` junto al código (`src/**/*.test.ts`).
+- API: tests **in-process** (`app.request`), sqlite **temporal** (nunca `packages/db/data/app.sqlite`). Tras spec 05, login real en `beforeEach` para `/v1/flags*`.
+- Domain: tests **unitarios puros**, sin DB ni HTTP. Tabla de casos para precedencia, 0/100, override vs %, estabilidad de terna, fail_closed.
+- DB: constraints (p.ej. `flag_key` unique) sobre sqlite temp + migrate.
+- Web: no se exige Playwright ni `*.test.tsx` en el MVP.
+
+## Mínimos (cuando exista el código)
+
+- `GET /health` → 200 `{ ok: true }`.
+- Flag duplicada → 409; `rollout_percent` fuera de 0–100 → 400.
+- Evaluate: ambiente off; overrides acme/globex; % 0/100; misma terna = mismo `enabled`; flag inexistente → `enabled: false`.
+- Distribución aproximada % 50 (~35–65% on en ~200 empresas).
+- Audit: escritura en mutaciones; `GET /v1/audit` 401 sin cookie.
+
+No mockear `@ff/domain.evaluateFlag` en tests que pretenden validar el producto; mockear I/O (DB caída), no la regla de negocio.

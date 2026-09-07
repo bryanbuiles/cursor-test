@@ -1,0 +1,31 @@
+---
+description: Evaluador de flags puro en @ff/domain, fuera de UI y HTTP
+alwaysApply: true
+---
+
+# Evaluador de flags
+
+La precedencia y el hash **solo** en `@ff/domain`. Hono carga snapshot, aplica cache y llama `evaluateFlag`. Next **nunca** decide `enabled`.
+
+```ts
+evaluateFlag(input: EvaluateInput, snapshot: FlagSnapshot | null): EvaluateResult
+```
+
+Puro: sin `fetch`, filesystem, Drizzle, `Date.now()` (el TTL es de la API), ni cookies.
+
+## Hash (no cambiar sin migración)
+
+`empresa_id + ":" + flag_key` → FNV-1a 32-bit (offset `2166136261`, prime `16777619`) → `bucket = hash % 100` → on si `bucket < rollout_percent`. % 0 siempre off; % 100 siempre on (si el ambiente está on y no hay override).
+
+## Precedencia
+
+1. Sin snapshot / datos inválidos → `{ enabled: false, reason: "fail_closed" }`
+2. `enabled_global === false` → `environment_off` (ignorar override y %)
+3. Override de esa empresa → `company_override` (no entra al %)
+4. Si no, `rollout`
+
+`reason`: `environment_off` | `company_override` | `rollout` | `fail_closed` | `critical_cache`.
+
+## API (transporte, no dominio)
+
+`POST /v1/evaluate` body `{ flag_key, environment, empresa_id }` → `{ enabled, reason }`. **Sin cookie.** Body inválido o DB caída: `enabled: false` (preferir 200 fail_closed). Flag `critical`: cache in-memory 30–60s (`critical_cache`); sin cache → false + log. Invalidar cache en escrituras de flags.
